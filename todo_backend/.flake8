@@ -1,7 +1,33 @@
+# Flake8 configuration for the FastAPI Todo backend
+# Keep rules minimal and Black-compatible to avoid churn in diffs.
+
 [flake8]
-exclude = .git,__pycache__,build,dist,venv
-select = E9,F
-max-line-length = 120
-per-file-ignores =
-    __init__.py:F401
-max-complexity = 18
+# Align with common Black defaults (choose one):
+#  - 88 is Black's default, but many teams prefer 100/120 for APIs.
+# Use 100 here for readability without encouraging very long lines.
+max-line-length = 100
+
+# Black-compatible ignores:
+# E203: whitespace before ':' (conflicts with Black slicing)
+# W503: line break before binary operator (Black prefers this style)
+ignore =
+    E203,
+    W503
+
+# Exclude paths that should not be linted
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    .pytest_cache,
+    interfaces
+
+# Only enable per-file-ignores if necessary; keep off by default to reduce noise.
+# Example (commented): loosen specific rules for tests if needed in future.
+# per-file-ignores =
+#     tests/*.py: S101
+
+# Notes:
+# - Keep this config minimal to focus on code quality without blocking development.
+# - Consider enabling additional plugins (flake8-bugbear, flake8-import-order) later if useful.
