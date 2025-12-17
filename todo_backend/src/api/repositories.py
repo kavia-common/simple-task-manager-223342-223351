@@ -16,11 +16,13 @@ class ListQuery:
     """
     Query parameters for listing todos.
     """
+
     limit: int = 50
     offset: int = 0
     completed: Optional[bool] = None
     search: Optional[str] = None
-    sort: str = "-created_at"  # allowed: created_at, -created_at, updated_at, -updated_at
+    # allowed: created_at, -created_at, updated_at, -updated_at
+    sort: str = "-created_at"
 
 
 # PUBLIC_INTERFACE
@@ -107,9 +109,15 @@ class InMemoryRepository(Repository):
                 updated["description"] = data.description
             if data.completed is not None:
                 updated["completed"] = data.completed
-            if data.due_date is not None or data.due_date is None and "due_date" in data.model_fields_set:
+
+            if (
+                data.due_date is not None
+                or data.due_date is None
+                and "due_date" in data.model_fields_set
+            ):
                 # Respect explicit nulling of due_date
                 updated["due_date"] = data.due_date
+
             updated["updated_at"] = self._now()
 
             self._items[todo_id] = updated
@@ -130,10 +138,16 @@ class InMemoryRepository(Repository):
 
             if q.search:
                 s = q.search.lower()
+
                 def matches(t: TodoEntity) -> bool:
                     title_ok = s in (t["title"] or "").lower()
-                    desc_ok = s in (t["description"] or "").lower() if t["description"] else False
+                    desc_ok = (
+                        s in (t["description"] or "").lower()
+                        if t["description"]
+                        else False
+                    )
                     return title_ok or desc_ok
+
                 items = [t for t in items if matches(t)]
 
             total = len(list(items)) if not isinstance(items, list) else len(items)

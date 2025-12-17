@@ -68,7 +68,11 @@ class TestTodosCRUD:
         assert todo["completed"] is False
 
     def test_create_todo_with_due_date_date_string(self):
-        payload = create_todo_payload(title="Pay bills", description="Electricity", due_date="2099-12-25")
+        payload = create_todo_payload(
+            title="Pay bills",
+            description="Electricity",
+            due_date="2099-12-25",
+        )
         res = client.post("/api/v1/todos/", json=payload)
         assert res.status_code == 201
         todo = res.json()
@@ -97,12 +101,24 @@ class TestTodosCRUD:
 
     def test_put_replace_todo(self):
         # Create
-        res_create = client.post("/api/v1/todos/", json=create_todo_payload(title="Initial", description="A", completed=False))
+        res_create = client.post(
+            "/api/v1/todos/",
+            json=create_todo_payload(
+                title="Initial",
+                description="A",
+                completed=False,
+            ),
+        )
         assert res_create.status_code == 201
         tid = res_create.json()["id"]
 
         # Replace with PUT (uses TodoCreate schema)
-        new_payload = create_todo_payload(title="Replaced", description=None, completed=True, due_date="2100-01-01")
+        new_payload = create_todo_payload(
+            title="Replaced",
+            description=None,
+            completed=True,
+            due_date="2100-01-01",
+        )
         res_put = client.put(f"/api/v1/todos/{tid}", json=new_payload)
         assert res_put.status_code == 200
         updated = res_put.json()
@@ -119,7 +135,13 @@ class TestTodosCRUD:
 
     def test_patch_partial_update(self):
         # Create
-        res_create = client.post("/api/v1/todos/", json=create_todo_payload(title="Partial", description="X"))
+        res_create = client.post(
+            "/api/v1/todos/",
+            json=create_todo_payload(
+                title="Partial",
+                description="X",
+            ),
+        )
         assert res_create.status_code == 201
         tid = res_create.json()["id"]
 
@@ -195,8 +217,8 @@ class TestListPaginationFilteringSorting:
         page2 = res2.json()
         assert page2["limit"] == 3
         assert page2["offset"] == 3
-        # Not asserting equality of items to avoid coupling to sort default besides direction;
-        # ensure we get non-empty or empty within bounds.
+        # Not asserting equality of items to avoid coupling to sort default
+        # besides direction; ensure we get non-empty or empty within bounds.
         assert len(page2["items"]) <= 3
 
     def test_list_filter_completed_true_false(self):
@@ -234,22 +256,36 @@ class TestListPaginationFilteringSorting:
         assert res_default.status_code == 200
         default_items = res_default.json()["items"]
         # Ensure items are in non-increasing created_at
-        created_ts = [datetime.fromisoformat(t["created_at"]) for t in default_items]
+        created_ts = [
+            datetime.fromisoformat(t["created_at"]) for t in default_items
+        ]
         assert created_ts == sorted(created_ts, reverse=True)
 
         # Sort by created_at asc
         res_asc = client.get("/api/v1/todos/?sort=created_at&limit=5")
         assert res_asc.status_code == 200
         items_asc = res_asc.json()["items"]
-        created_ts_asc = [datetime.fromisoformat(t["created_at"]) for t in items_asc]
+        created_ts_asc = [
+            datetime.fromisoformat(t["created_at"]) for t in items_asc
+        ]
         assert created_ts_asc == sorted(created_ts_asc, reverse=False)
 
         # Override order explicitly
-        res_order_desc = client.get("/api/v1/todos/?sort=created_at&order=desc&limit=5")
+        res_order_desc = client.get(
+            "/api/v1/todos/",
+            params={"sort": "created_at", "order": "desc", "limit": 5},
+        )
         assert res_order_desc.status_code == 200
-        items_order_desc = res_order_desc.json()["items"]
-        created_ts_desc = [datetime.fromisoformat(t["created_at"]) for t in items_order_desc]
-        assert created_ts_desc == sorted(created_ts_desc, reverse=True)
+        items_order_desc = res_order_desc.json()[
+            "items"
+        ]
+        created_ts_desc = [
+            datetime.fromisoformat(t["created_at"]) for t in items_order_desc
+        ]
+        assert created_ts_desc == sorted(
+            created_ts_desc,
+            reverse=True,
+        )
 
     def test_list_invalid_order_param(self):
         res = client.get("/api/v1/todos/?order=invalid")

@@ -39,7 +39,10 @@ class SQLiteRepository:
 
     @contextmanager
     def _conn(self) -> Generator[sqlite3.Connection, None, None]:
-        conn = sqlite3.connect(self._db_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+        conn = sqlite3.connect(
+            self._db_path,
+            detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+        )
         conn.row_factory = sqlite3.Row
         try:
             yield conn
@@ -63,13 +66,22 @@ class SQLiteRepository:
                 """
             )
             conn.execute(
-                f"CREATE INDEX IF NOT EXISTS idx_{_COLS.table}_completed ON {_COLS.table}({_COLS.completed})"
+                (
+                    f"CREATE INDEX IF NOT EXISTS idx_{_COLS.table}_completed "
+                    f"ON {_COLS.table}({_COLS.completed})"
+                )
             )
             conn.execute(
-                f"CREATE INDEX IF NOT EXISTS idx_{_COLS.table}_created_at ON {_COLS.table}({_COLS.created_at})"
+                (
+                    f"CREATE INDEX IF NOT EXISTS idx_{_COLS.table}_created_at "
+                    f"ON {_COLS.table}({_COLS.created_at})"
+                )
             )
             conn.execute(
-                f"CREATE INDEX IF NOT EXISTS idx_{_COLS.table}_updated_at ON {_COLS.table}({_COLS.updated_at})"
+                (
+                    f"CREATE INDEX IF NOT EXISTS idx_{_COLS.table}_updated_at "
+                    f"ON {_COLS.table}({_COLS.updated_at})"
+                )
             )
 
     def _row_to_entity(self, row: sqlite3.Row) -> TodoEntity:
@@ -81,7 +93,9 @@ class SQLiteRepository:
         return {
             "id": int(row[_COLS.id]),
             "title": str(row[_COLS.title]),
-            "description": row[_COLS.description] if row[_COLS.description] is not None else None,
+            "description": (
+                row[_COLS.description] if row[_COLS.description] is not None else None
+            ),
             "completed": bool(row[_COLS.completed]),
             "due_date": parse_dt(row[_COLS.due_date]),
             "created_at": parse_dt(row[_COLS.created_at]),  # type: ignore
@@ -94,38 +108,55 @@ class SQLiteRepository:
         with self._conn() as conn:
             cur = conn.execute(
                 f"""
-                INSERT INTO {_COLS.table} ({_COLS.title}, {_COLS.description}, {_COLS.completed},
-                    {_COLS.due_date}, {_COLS.created_at}, {_COLS.updated_at})
+                INSERT INTO {_COLS.table} (
+                    {_COLS.title}, {_COLS.description}, {_COLS.completed},
+                    {_COLS.due_date}, {_COLS.created_at}, {_COLS.updated_at}
+                )
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (data.title, data.description, 1 if data.completed else 0, due, now, now),
             )
             new_id = cur.lastrowid
             row = conn.execute(
-                f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?", (new_id,)
+                f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?",
+                (new_id,),
             ).fetchone()
             assert row is not None
             return self._row_to_entity(row)
 
     def get(self, todo_id: int) -> Optional[TodoEntity]:
         with self._conn() as conn:
-            row = conn.execute(f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?", (todo_id,)).fetchone()
+            row = conn.execute(
+                f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?",
+                (todo_id,),
+            ).fetchone()
             return self._row_to_entity(row) if row else None
 
     def update(self, todo_id: int, data: TodoUpdate) -> Optional[TodoEntity]:
         with self._conn() as conn:
-            row = conn.execute(f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?", (todo_id,)).fetchone()
+            row = conn.execute(
+                f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?",
+                (todo_id,),
+            ).fetchone()
             if not row:
                 return None
             current = self._row_to_entity(row)
 
             title = data.title if data.title is not None else current["title"]
-            description = data.description if "description" in data.model_fields_set else current["description"]
-            completed = (data.completed if data.completed is not None else current["completed"])
+            description = (
+                data.description
+                if "description" in data.model_fields_set
+                else current["description"]
+            )
+            completed = (
+                data.completed if data.completed is not None else current["completed"]
+            )
             if "completed" not in data.model_fields_set:
                 completed = current["completed"]
             due_date = (
-                data.due_date if "due_date" in data.model_fields_set else current["due_date"]
+                data.due_date
+                if "due_date" in data.model_fields_set
+                else current["due_date"]
             )
             updated_at = datetime.now().isoformat()
             conn.execute(
@@ -144,13 +175,19 @@ class SQLiteRepository:
                     todo_id,
                 ),
             )
-            row2 = conn.execute(f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?", (todo_id,)).fetchone()
+            row2 = conn.execute(
+                f"SELECT * FROM {_COLS.table} WHERE {_COLS.id} = ?",
+                (todo_id,),
+            ).fetchone()
             assert row2 is not None
             return self._row_to_entity(row2)
 
     def delete(self, todo_id: int) -> bool:
         with self._conn() as conn:
-            cur = conn.execute(f"DELETE FROM {_COLS.table} WHERE {_COLS.id} = ?", (todo_id,))
+            cur = conn.execute(
+                f"DELETE FROM {_COLS.table} WHERE {_COLS.id} = ?",
+                (todo_id,),
+            )
             return cur.rowcount > 0
 
     def list(self, query: Optional[ListQuery] = None) -> Tuple[List[TodoEntity], int]:
@@ -184,7 +221,8 @@ class SQLiteRepository:
         with self._conn() as conn:
             # total count
             count_row = conn.execute(
-                f"SELECT COUNT(*) as cnt FROM {_COLS.table} {where_sql}", params
+                f"SELECT COUNT(*) as cnt FROM {_COLS.table} {where_sql}",
+                params,
             ).fetchone()
             total = int(count_row["cnt"]) if count_row else 0
 

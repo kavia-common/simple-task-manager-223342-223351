@@ -3,10 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, TypedDict
 
+
 # PUBLIC_INTERFACE
 class TodoEntity(TypedDict):
     """
-    A lightweight domain model representing a Todo item for non-ORM storage backends.
+    A lightweight domain model representing a Todo item for non-ORM storage
+    backends.
 
     Fields:
     - id: Unique integer identifier
@@ -17,6 +19,7 @@ class TodoEntity(TypedDict):
     - created_at: UTC/local creation timestamp (datetime)
     - updated_at: UTC/local last update timestamp (datetime)
     """
+
     id: int
     title: str
     description: Optional[str]

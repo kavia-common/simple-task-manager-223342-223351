@@ -6,17 +6,23 @@ from fastapi.responses import JSONResponse
 from .settings import get_settings
 from .routers import todos as todos_router
 
+
 openapi_tags = [
     {"name": "health", "description": "Service health and status endpoints."},
     {
         "name": "todos",
-        "description": "CRUD operations for Todo items with filtering, sorting, and pagination.",
+        "description": (
+            "CRUD operations for Todo items with filtering, sorting, and pagination."
+        ),
     },
 ]
 
+
 app = FastAPI(
     title="Todo Backend",
-    description="Backend API service for managing todos with pluggable storage backends.",
+    description=(
+        "Backend API service for managing todos with pluggable storage backends."
+    ),
     version="0.1.0",
     openapi_tags=openapi_tags,
 )
@@ -24,7 +30,9 @@ app = FastAPI(
 _settings = get_settings()
 
 # Configure CORS based on settings (.env -> CORS_ALLOW_ORIGINS), with '*' fallback
-allow_all = (_settings.cors_allow_origins == ["*"]) or (len(_settings.cors_allow_origins) == 0)
+allow_all = (_settings.cors_allow_origins == ["*"]) or (
+    len(_settings.cors_allow_origins) == 0
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if allow_all else _settings.cors_allow_origins,
@@ -33,9 +41,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Global exception handlers for consistent JSON on validation errors
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """
     Return a consistent JSON structure for request validation errors.
 
@@ -54,6 +65,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "detail": exc.errors(),
         },
     )
+
 
 # PUBLIC_INTERFACE
 @app.get("/", summary="Health Check", tags=["health"])

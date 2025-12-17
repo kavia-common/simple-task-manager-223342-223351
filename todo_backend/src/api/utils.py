@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Sequence, Union
 
+
 # PUBLIC_INTERFACE
 def pagination_envelope(
     items: Union[Sequence[Any], Iterable[Any]],

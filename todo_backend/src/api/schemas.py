@@ -12,8 +12,11 @@ DueDate = Optional[datetime]
 
 def _parse_due_date(value: Optional[DueDateInput]) -> Optional[datetime]:
     """
-    Internal helper to normalize due_date input into an aware datetime (naive allowed).
-    - If value is a string, attempt to parse via datetime.fromisoformat; if time is missing, set to 00:00.
+    Internal helper to normalize due_date input into an aware datetime (naive
+    allowed).
+
+    - If value is a string, attempt to parse via datetime.fromisoformat; if time
+      is missing, set to 00:00.
     - If value is a date (not datetime), convert to datetime at 00:00.
     - If value is a datetime, return as-is.
     """
@@ -40,11 +43,14 @@ def _parse_due_date(value: Optional[DueDateInput]) -> Optional[datetime]:
                 return datetime(d.year, d.month, d.day, 0, 0, 0)
             except ValueError as e:
                 raise ValueError(
-                    "Invalid due_date format. Use ISO8601 date or datetime string (e.g., '2025-01-31' or '2025-01-31T13:45:00')."
+                    "Invalid due_date format. Use ISO8601 date or datetime string "
+                    "(e.g., '2025-01-31' or '2025-01-31T13:45:00')."
                 ) from e
 
     # Any other type is invalid
-    raise ValueError("Invalid type for due_date; expected date, datetime, or ISO8601 string.")
+    raise ValueError(
+        "Invalid type for due_date; expected date, datetime, or ISO8601 string."
+    )
 
 
 # PUBLIC_INTERFACE
@@ -64,12 +70,22 @@ class TodoCreate(BaseModel):
         }
     )
 
-    title: str = Field(..., description="Short title for the todo item", min_length=1, max_length=200)
-    description: Optional[str] = Field(default=None, description="Optional detailed description")
+    title: str = Field(
+        ...,
+        description="Short title for the todo item",
+        min_length=1,
+        max_length=200,
+    )
+    description: Optional[str] = Field(
+        default=None, description="Optional detailed description"
+    )
     completed: bool = Field(default=False, description="Completion status flag")
     due_date: Optional[datetime] = Field(
         default=None,
-        description="Due date/time of the todo item. Accepts ISO8601 date or datetime; dates are set to 00:00",
+        description=(
+            "Due date/time of the todo item. Accepts ISO8601 date or datetime; "
+            "dates are set to 00:00"
+        ),
     )
 
     @field_validator("title")
@@ -112,12 +128,24 @@ class TodoUpdate(BaseModel):
         }
     )
 
-    title: Optional[str] = Field(default=None, description="Short title for the todo item", min_length=1, max_length=200)
-    description: Optional[str] = Field(default=None, description="Optional detailed description")
-    completed: Optional[bool] = Field(default=None, description="Completion status flag")
+    title: Optional[str] = Field(
+        default=None,
+        description="Short title for the todo item",
+        min_length=1,
+        max_length=200,
+    )
+    description: Optional[str] = Field(
+        default=None, description="Optional detailed description"
+    )
+    completed: Optional[bool] = Field(
+        default=None, description="Completion status flag"
+    )
     due_date: Optional[datetime] = Field(
         default=None,
-        description="Due date/time of the todo item. Accepts ISO8601 date or datetime; dates are set to 00:00",
+        description=(
+            "Due date/time of the todo item. Accepts ISO8601 date or datetime; "
+            "dates are set to 00:00"
+        ),
     )
 
     @field_validator("title")
@@ -164,10 +192,13 @@ class TodoOut(BaseModel):
 
     id: int = Field(..., description="Unique identifier of the todo item")
     title: str = Field(..., description="Short title for the todo item")
-    description: Optional[str] = Field(default=None, description="Optional detailed description")
+    description: Optional[str] = Field(
+        default=None, description="Optional detailed description"
+    )
     completed: bool = Field(..., description="Completion status flag")
     due_date: Optional[datetime] = Field(
-        default=None, description="Due date/time of the todo item as an ISO8601 datetime"
+        default=None,
+        description="Due date/time of the todo item as an ISO8601 datetime",
     )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
