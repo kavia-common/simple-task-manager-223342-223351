@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .settings import get_settings
 from .routers import todos as todos_router
+from .auth import get_basic_auth_dependency
 
 
 openapi_tags = [
@@ -41,6 +42,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Prepare optional basic auth dependency (no-op if disabled)
+_basic_auth_dep = get_basic_auth_dependency()
+
 
 # Global exception handlers for consistent JSON on validation errors
 @app.exception_handler(RequestValidationError)
@@ -68,7 +72,12 @@ async def validation_exception_handler(
 
 
 # PUBLIC_INTERFACE
-@app.get("/", summary="Health Check", tags=["health"])
+@app.get(
+    "/",
+    summary="Health Check",
+    tags=["health"],
+    dependencies=[Depends(_basic_auth_dep)],
+)
 def health_check():
     """
     Health check endpoint.
@@ -79,5 +88,5 @@ def health_check():
     return {"message": "Healthy", "backend": _settings.persistence_backend}
 
 
-# Include routers
-app.include_router(todos_router.router)
+# Include routers with optional auth dependency applied to all routes
+app.include_router(todos_router.router, dependencies=[Depends(_basic_auth_dep)])

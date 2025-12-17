@@ -30,6 +30,9 @@ Configuration is driven by environment variables (see `.env.example`). Create a 
 - PERSISTENCE_BACKEND: memory (default) or sqlite
 - SQLITE_DB_PATH: path to SQLite file (default: ./data/todos.db)
 - CORS_ALLOW_ORIGINS: comma-separated list of allowed origins or "*" to allow all (default: *)
+- ENABLE_BASIC_AUTH: set to "true" to enable optional HTTP Basic auth (default: false)
+- BASIC_AUTH_USERNAME: username for basic auth (required when ENABLE_BASIC_AUTH=true)
+- BASIC_AUTH_PASSWORD: password for basic auth (required when ENABLE_BASIC_AUTH=true)
 
 Example:
 ```bash
@@ -37,6 +40,10 @@ cp .env.example .env
 # Optionally edit .env to use SQLite:
 # PERSISTENCE_BACKEND=sqlite
 # SQLITE_DB_PATH=./data/todos.db
+# To enable Basic Auth:
+# ENABLE_BASIC_AUTH=true
+# BASIC_AUTH_USERNAME=admin
+# BASIC_AUTH_PASSWORD=secret
 ```
 
 ## API overview

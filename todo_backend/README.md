@@ -39,7 +39,7 @@ Supported variables:
 - PERSISTENCE_BACKEND: memory (default) or sqlite
 - SQLITE_DB_PATH: path to SQLite file (default: ./data/todos.db)
 - CORS_ALLOW_ORIGINS: comma-separated list of allowed origins or "*" to allow all (default: *)
-- ENABLE_BASIC_AUTH (optional): "true" to enable simple basic auth (not implemented by default; placeholder)
+- ENABLE_BASIC_AUTH (optional): "true" to enable simple HTTP Basic authentication (default: false)
 - BASIC_AUTH_USERNAME (optional): username for basic auth when enabled
 - BASIC_AUTH_PASSWORD (optional): password for basic auth when enabled
 
@@ -50,6 +50,31 @@ SQLITE_DB_PATH=./data/todos.db
 ```
 
 Note: When using SQLite, the database file and tables will be created automatically on first run.
+
+## Optional HTTP Basic Authentication
+
+You can enable a lightweight HTTP Basic Auth guard across the health endpoint and the entire Todos API.
+- When ENABLE_BASIC_AUTH is not set or set to "false", there is no auth (default behavior).
+- When set to "true", both BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD must be provided. Requests without valid Basic credentials receive 401 with `WWW-Authenticate: Basic`.
+
+Example `.env`:
+```env
+ENABLE_BASIC_AUTH=true
+BASIC_AUTH_USERNAME=admin
+BASIC_AUTH_PASSWORD=secret
+```
+
+Example request with credentials:
+```bash
+curl -u admin:secret http://localhost:3001/
+curl -u admin:secret http://localhost:3001/api/v1/todos
+```
+
+Implementation details:
+- Reusable dependency: `src/api/auth.py` provides `get_basic_auth_dependency()` which becomes a no-op unless auth is enabled.
+- Wired in `src/api/main.py`:
+  - Applied to `GET /` (health).
+  - Applied to all routes of the Todos router via `app.include_router(..., dependencies=[Depends(dep)])`.
 
 ## Running with Docker
 
@@ -97,7 +122,3 @@ pytest
 ```
 
 By default, tests use the in-memory backend (`PERSISTENCE_BACKEND=memory`).
-
-## Notes on Authentication
-
-Environment variables for basic auth (ENABLE_BASIC_AUTH, BASIC_AUTH_USERNAME, BASIC_AUTH_PASSWORD) are included as optional placeholders. The base template does not enforce authentication by default. If you add authentication in the future, wire it up in `src/api/main.py` or router dependencies and document the behavior here.
