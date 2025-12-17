@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .settings import get_settings
 from .routers import todos as todos_router
@@ -21,8 +23,8 @@ app = FastAPI(
 
 _settings = get_settings()
 
-# Configure CORS based on settings
-allow_all = _settings.cors_allow_origins == ["*"]
+# Configure CORS based on settings (.env -> CORS_ALLOW_ORIGINS), with '*' fallback
+allow_all = (_settings.cors_allow_origins == ["*"]) or (len(_settings.cors_allow_origins) == 0)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if allow_all else _settings.cors_allow_origins,
@@ -30,6 +32,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global exception handlers for consistent JSON on validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """
+    Return a consistent JSON structure for request validation errors.
+
+    Response format:
+        {
+            "error": "ValidationError",
+            "detail": [... pydantic/fastapi error details ...],
+            "message": "Request validation failed"
+        }
+    """
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "ValidationError",
+            "message": "Request validation failed",
+            "detail": exc.errors(),
+        },
+    )
 
 # PUBLIC_INTERFACE
 @app.get("/", summary="Health Check", tags=["health"])

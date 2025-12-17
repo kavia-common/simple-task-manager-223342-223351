@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from ..repositories import ListQuery, Repository, get_repository
 from ..schemas import TodoCreate, TodoOut, TodoUpdate
+from ..utils import pagination_envelope
 
 router = APIRouter(
     prefix="/api/v1/todos",
@@ -114,12 +115,14 @@ def list_todos(
         sort=normalized_sort,
     )
     items, total = repo.list(query)
-    return PaginationEnvelope(
+    envelope = pagination_envelope(
         items=[TodoOut(**it) for it in items],  # type: ignore[arg-type]
         total=total,
         limit=limit,
         offset=offset,
     )
+    # Pydantic model will validate and serialize the helper's dict
+    return PaginationEnvelope(**envelope)  # type: ignore[arg-type]
 
 
 # PUBLIC_INTERFACE
